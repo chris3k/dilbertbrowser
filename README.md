@@ -1,2 +1,2 @@
 # dilbertbrowser
-dilbert.com comic browser
+Simple dilbert.com comic browser with preload feature.
