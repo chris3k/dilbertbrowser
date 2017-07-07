@@ -1,4 +1,5 @@
 import argparse
+from Queue import Queue
 from Tkinter import Tk, Label, Button, StringVar
 from collections import deque
 from threading import Thread
@@ -29,12 +30,26 @@ def append_strip(url, left=False):
         print "GET: {}".format(url)
 
 
+class ComicGrabber(Thread):
+    def __init__(self):
+        Thread.__init__(self, name="ComicGrabber")
+        self.task_queue = Queue()
+
+    def push(self, url, left):
+        self.task_queue.put((url, left))
+
+    def run(self):
+        while True:
+            u, d = self.task_queue.get()
+            append_strip(u, d)
+            self.task_queue.task_done()
+
+
 parser = argparse.ArgumentParser(description='Dilbert browser')
 parser.add_argument('date', nargs="?", default="2017-02-05", help='Start date')
 args = parser.parse_args()
 start_date = "/strip/{}".format(args.date)
 append_strip(start_date)
-
 
 class DilbertGUI:
     def __init__(self, master):
@@ -61,8 +76,11 @@ class DilbertGUI:
         self.close_button = Button(master, text="Close", command=master.quit)
         self.close_button.pack()
 
-        Thread(target=append_strip, args=(current.next_strip,)).start()
-        Thread(target=append_strip, args=(current.prev_strip, True)).start()
+        self.cg = ComicGrabber()
+        self.cg.setDaemon(True)
+        self.cg.start()
+        self.cg.push(current.next_strip, False)
+        self.cg.push(current.prev_strip, True)
 
         self.master.bind("<Left>", lambda e, d=-1: self.change_strip(d))
         self.master.bind("<Right>", lambda e, d=1: self.change_strip(d))
@@ -83,8 +101,8 @@ class DilbertGUI:
 
         # preload
         current = strips[idx]
-        Thread(target=append_strip, args=(current.next_strip,)).start()
-        Thread(target=append_strip, args=(current.prev_strip, True)).start()
+        self.cg.push(current.next_strip, False)
+        self.cg.push(current.prev_strip, True)
 
     def render_strip(self, s):
         """
