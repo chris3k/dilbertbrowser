@@ -16,8 +16,11 @@ class DilbertParser(HTMLParser):
         s.title = self.properties.get("og:title", "")
         s.url = self.properties.get("og:url", "")
         s.img_url = self.properties.get("og:image", "")
-        r = requests.get(s.img_url)
-        s.comic = StringIO(r.content)
+        try:
+            r = requests.get(s.img_url)
+            s.comic = StringIO(r.content)
+        except Exception as e:
+            s.comic = None
         # s.local_img_path = self.properties.get("", "") "dt170206.gif"
         s.prev_strip = self.properties.get("prev_strip", "")
         s.next_strip = self.properties.get("next_strip", "")
