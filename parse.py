@@ -15,7 +15,7 @@ class DilbertParser(HTMLParser):
         s = Strip()
         s.title = self.properties.get("og:title", "")
         s.url = self.properties.get("og:url", "")
-        s.img_url = self.properties.get("strip_url", "")
+        s.img_url = self.properties.get("og:image", "")
         r = requests.get(s.img_url)
         s.comic = StringIO(r.content)
         # s.local_img_path = self.properties.get("", "") "dt170206.gif"
@@ -37,12 +37,8 @@ class DilbertParser(HTMLParser):
             if m.get("title") == "Next Strip":
                 self.properties["next_strip"] = m.get("href")
 
-        if tag == "img":
-            m = dict((k, v) for k, v in attrs)
-            if m.get("class") == "img-responsive img-comic":
-                self.properties["strip_url"] = m.get("src")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = DilbertParser()
     r = requests.get("http://dilbert.com/strip/2017-02-05")
     parser.feed(r.text)
